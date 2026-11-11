@@ -14,6 +14,7 @@
 | `why` | 自动可见 | 调查/综合用本工具带 MCP 的子 agent;列出本会话的 MCP |
 | `figure-it-out` | `/figure-it-out` 手动 | 去掉对 poteto-mode 的依赖 |
 | `show-me-your-work` | `/show-me-your-work` 手动 | 交叉审查改用 Herdr 起别家模型;不读 Cursor 的 transcript 目录 |
+| `herdr-ticket-flow` | 自动可见 | 自己写的(非 pstack);仓库有 worktree 入口时先用入口建,再 `herdr worktree open` 挂进侧边栏 |
 | `principle-*`(20 条) | 自动可见 | 去掉 `disable-model-invocation`,description 常驻作为原则索引 |
 
 ## 安装

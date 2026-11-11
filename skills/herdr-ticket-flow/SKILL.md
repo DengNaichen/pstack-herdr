@@ -1,6 +1,6 @@
 ---
 name: herdr-ticket-flow
-description: "一张 ticket 一个 worktree workspace、一个 agent 从头干到尾。当用户交来一个或多个 ticket / issue(如 ENG-123)要你实现,或要求「开个 worktree / 分支」「这几件事并行做」「把这个 ticket 干完」时使用。要求 HERDR_ENV=1;否则停下来说明。"
+description: "在 Herdr 里把一个或多个 ticket / issue 分派给 agent 实现:一张 ticket 一个 worktree workspace、一个 agent 从头干到尾。用于用户交来 ticket 要求并行实现、或「把这个 ticket 派出去干完」。要求 HERDR_ENV=1;否则停下来说明。"
 ---
 
 # Herdr 的 ticket 流程
@@ -23,15 +23,21 @@ agent 的 cwd 在进程启动那一刻钉死,之后**没有任何办法改**。�
 
 - 永远不要「先起 agent,再让它进 worktree」;
 - 永远不要让 agent 用 `git -C` 去别人的 checkout 里干活;
-- 永远不要用裸 `git worktree add`。
+- 不要用裸 `git worktree add` 自己建 checkout:用仓库的 worktree 入口或 `herdr worktree create`(见下),并且一定挂进 Herdr,侧边栏才看得到。
 
-**一张 ticket = 三步:**
+**一张 ticket = 三步。** 第 1 步有两条路,先看仓库有没有自己的 worktree 入口(读仓库的 `AGENTS.md` / git 流程文档,例如 Stet 的 `scripts/new-worktree`):
 
 ```bash
-# 1) 建拓扑。返回的 root pane 已经站在这个 checkout 里。
-herdr worktree create --cwd <repo-root> --branch <ticket>-<slug> \
+# 1a) 仓库有入口:用它建(保留它的路径约定、基线刷新和环境准备),再挂进 Herdr
+<repo-root>/scripts/new-worktree <branch>          # 以仓库文档为准;输出新 checkout 的路径
+herdr worktree open --cwd <repo-root> --path <新 checkout 路径> \
     --label <TICKET> --no-focus
-#    → 解析 .result.workspace.workspace_id 和 .result.root_pane.pane_id
+
+# 1b) 仓库没有入口:直接让 Herdr 建
+herdr worktree create --cwd <repo-root> --branch <branch> \
+    --label <TICKET> --no-focus
+
+#    两条路都解析 .result.root_pane.pane_id(和 workspace id);root pane 已经站在这个 checkout 里。
 
 # 2) 在那个 pane 里起 worker
 herdr agent start <ticket小写> --kind <kind> --pane <root_pane.pane_id>
@@ -42,14 +48,14 @@ herdr agent prompt <ticket小写> "<ticket 正文 + 验收条件>" --wait --time
 
 ## 命名:一个名字贯穿四个表面
 
-| 表面 | 值 |
+| 表面 | 值(以 GitHub issue #143 为例) |
 | --- | --- |
-| Linear | `ENG-123` |
-| workspace label | `--label ENG-123` |
-| branch | `--branch eng-123-fix-login` |
-| agent 名 | `eng-123` |
+| ticket | `#143`(或 tracker 里的 id) |
+| workspace label | `--label issue-143` |
+| branch | 按仓库的命名约定,例如 `issue-143-pre-commit` |
+| agent 名 | `issue-143` |
 
-agent 名必须匹配 `[a-z][a-z0-9_-]{0,31}` 且在 session 内唯一。这样 `herdr agent prompt eng-123 "..."` 不用查 pane id,侧边栏第一行就是 ticket 号。
+分支名一律听仓库的约定;仓库没约定时用 `<ticket>-<短名>`。agent 名必须匹配 `[a-z][a-z0-9_-]{0,31}` 且在 session 内唯一。这样 `herdr agent prompt issue-143 "..."` 不用查 pane id,侧边栏第一行就是 ticket 号。
 
 ## 硬性要求
 
@@ -91,7 +97,7 @@ Herdr 只负责**拓扑**:checkout、pane、agent 的位置。分支、commit、
 
 | 反模式 | 为什么错 |
 | --- | --- |
-| `git worktree add` + `cd` 进去干活 | 侧边栏看不见,而且 cwd 改不掉 |
+| 建了 worktree 却不挂进 Herdr,或 `cd` 进去干活 | 侧边栏看不见,而且 cwd 改不掉 |
 | 主会话里用内部 subagent 干 ticket | 没有 pane,就没有屏幕可跳、没有 `blocked` 可看 |
 | `herdr pane move` 搬自己的 pane | 不带 cwd,搬完标签是新的、分支还是旧的,布局开始说谎 |
 | 一张 ticket 拆给两个 agent | 并行粒度错了,合并成本远大于收益 |
