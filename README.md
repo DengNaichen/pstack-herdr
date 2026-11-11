@@ -2,7 +2,7 @@
 
 [poteto/pstack](https://github.com/poteto/plugins/tree/main/pstack) 的个人改编版,适配在 Herdr 里跑多家模型(Claude / Codex / Antigravity)的环境。
 
-上游本地副本:`~/Developer/poteto-plugins/pstack`。原作 MIT 许可,见 [LICENSE](LICENSE)。
+原作 MIT 许可,见 [LICENSE](LICENSE)。
 
 ## 内容
 
@@ -22,7 +22,7 @@
 `~/.agents/skills/` 是中心,其他工具的目录都链接到它:
 
 ```text
-~/.agents/skills/<skill>         -> ~/Developer/pstack-herdr/skills/<skill>   (Codex 直接读)
+~/.agents/skills/<skill>         -> <clone>/skills/<skill>                     (Codex 直接读)
 ~/.claude/skills/<skill>         -> ../../.agents/skills/<skill>              (Claude Code)
 ~/.gemini/config/skills/<skill>  -> ~/.agents/skills/<skill>                  (Antigravity / agy)
 ```
@@ -31,7 +31,7 @@
 
 `hooks/herdr-subagent-routing.sh` 是 SessionStart hook:在 Herdr 里(`HERDR_ENV=1`)把 [`herdr-subagent-routing.md`](hooks/herdr-subagent-routing.md) 的分流规则注入上下文,告诉 agent 什么时候用 Herdr 起 agent、什么时候用原生子 agent;不在 Herdr 里不注入。规则正文只改这一个 md。
 
-安装:`~/.agents/hooks -> ~/Developer/pstack-herdr/hooks`,三家的全局配置各加一条(与 Herdr 自带的 hook 并列,不改它们):
+安装:`~/.agents/hooks -> <clone>/hooks`,三家的全局配置各加一条(与 Herdr 自带的 hook 并列,不改它们):
 
 | 工具 | 配置文件 | 命令 |
 | --- | --- | --- |

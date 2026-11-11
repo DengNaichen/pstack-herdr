@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Arena(Herdr 方案版)
 
-改编自 poteto/pstack 的 `arena`(`~/Developer/poteto-plugins/pstack/skills/arena/SKILL.md`)。
+改编自 poteto/pstack 的 [`arena`](https://github.com/poteto/plugins/blob/main/pstack/skills/arena/SKILL.md)。
 
 沿用原版的思想:同一个问题让多个模型**独立**作答,只给评审看的 rubric,换一家模型交叉评审,主持人逐份读完、按 rubric 挑底稿、亲手嫁接,记下放弃了什么。
 
