@@ -3,7 +3,7 @@
 用 Herdr(`herdr agent start ...`):
 - 需要不同家族的模型(Claude / Codex / agy)
 - 任务较长,用户可能想看进度或中途介入
-- 要在独立的 worktree 里改代码(一张 ticket 一个 agent)
+- 多个 agent 同时写代码:每个写代码的 agent 各开一个 worktree(见 herdr-parallel-tasks);只有一个在写就用当前 checkout
 
 用你自己的原生子 agent:
 - 快速只读的查找、探索,同一家模型就够
