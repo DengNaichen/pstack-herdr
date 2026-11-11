@@ -37,12 +37,12 @@ test "${HERDR_ENV:-}" = 1
 
 | 角色 | Herdr kind | 启动参数(`agent start ... --` 之后) |
 | --- | --- | --- |
-| 参赛者 `claude` | `claude` | `--effort high --permission-mode acceptEdits --add-dir /tmp/arena-<slug>`(模型用 settings 默认:Opus 5.5) |
-| 参赛者 `gpt` | `codex` | `-m gpt-6.1-sol -c model_reasoning_effort="high" -s workspace-write -a on-request --add-dir /tmp/arena-<slug>` |
-| 参赛者 `gemini` | `agy` | `--model gemini-4-carbon-medium --mode accept-edits --add-dir /tmp/arena-<slug>` |
-| 交叉评审 `judge` | `agy` | `--model gemini-4-argon-high --mode accept-edits --add-dir <repo-root>` |
+| 参赛者 `claude` | `claude` | `--effort high`(模型用 settings 默认:Opus 5.5) |
+| 参赛者 `gpt` | `codex` | `-m gpt-6.1-sol -c model_reasoning_effort="high"` |
+| 参赛者 `gemini` | `agy` | `--model gemini-4-carbon-medium` |
+| 交叉评审 `judge` | `agy` | `--model gemini-4-argon-high` |
 
-自动接受修改是为了让参赛者能写方案文件而不卡在审批上。它们在技术上也能改仓库,「只读」靠的是 prompt 约束,再由 Phase F 的 `git status` 基线对比兜底。
+**启动参数只指定模型和推理强度,不传任何权限、沙盒、审批相关参数**(`--permission-mode`、`-s`、`-a`、`--mode` 等)。用户的各 CLI 默认已是最高权限;额外传参只会把它们收紧,导致参赛者卡在审批上找用户要权限。「只读」靠 prompt 约束,再由 Phase F 的 `git status` 基线对比兜底。
 
 改模型只改这张表。规则:
 
@@ -79,62 +79,75 @@ test "${HERDR_ENV:-}" = 1
   brief.md        # 题目 + 约束 + 共享背景(参赛者看)
   rubric.md       # 只给评审和主持人
   baseline.txt
-  proposals/      # 参赛者各写一份
-  blind/          # 给评审的匿名副本
+  proposals/      # 参赛者各写一份,带模型名
+  mapping.txt     # 匿名标签 ↔ 参赛者,只有主持人看
+  synthesis.md    # Phase G 的综合记录
+/tmp/arena-<slug>-judge/   # 评审的工作目录,只放评审该看的东西
+  brief.md  rubric.md  A.md  B.md  C.md  judge.md
 ```
 
 题目含糊时先问用户,不要带着含糊开跑 —— 三份方案会各自往不同方向猜。
 
 ## Phase B:并行出题(Fan out)
 
-建一个专用 tab,三个参赛者放在里面,不挤用户当前的 pane:
+建一个专用 tab,不挤用户当前的 pane。布局是 2×2 网格,参赛者占三格,右下角留给评审:
+
+```text
+┌──────────┬──────────┐
+│ claude   │ gpt      │
+├──────────┼──────────┤
+│ gemini   │ (judge)  │
+└──────────┴──────────┘
+```
 
 ```bash
 herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd <repo-root> \
     --label arena-<slug> --no-focus
-#   → 解析 .result.tab.tab_id 和 .result.root_pane.pane_id
-herdr pane split <root_pane_id> --direction right --cwd <repo-root> --no-focus
-herdr pane split <root_pane_id> --direction down  --cwd <repo-root> --no-focus
+#   → 解析 .result.root_pane.pane_id,作为 claude 格
+herdr pane split <claude_pane> --direction right --cwd <repo-root> --no-focus   # → gpt 格
+herdr pane split <claude_pane> --direction down  --cwd <repo-root> --no-focus   # → gemini 格
 #   → 每次解析 .result.pane.pane_id
 
 herdr agent start a-<slug>-<runner> --kind <kind> --pane <pane_id> -- <args...>
 herdr agent prompt a-<slug>-<runner> "<参赛者 prompt>"     # 不带 --wait,三个同时跑
+herdr agent get a-<slug>-<runner>                           # 几秒后确认状态是 working
 ```
 
 - 不要猜 id,一律从 JSON 解析。永远 `--no-focus`。
+- **确认 prompt 真的被接住。** `agent_prompted` 只说明字写进了终端,不代表 agent 开始干活。agy 等 CLI 启动时可能弹公告(如「Introducing Gemini …  esc to dismiss」)把 prompt 吞掉。发完几秒后状态仍是 `idle`:`agent read --source visible` 看屏幕,输入框为空就 `agent send-keys <name> esc` 关掉弹窗再重发;输入框里还有字就只补一个 Enter,不要重发。
 - cwd 是仓库根目录,这样参赛者能读代码;写入只发生在 `/tmp/arena-<slug>/`。
 
-参赛者 prompt(三人相同):
+参赛者 prompt(三人相同,只有文件名不同):
 
 ```text
-请为下面的问题独立给出一份方案。
+请为这个设计问题给出一份方案:/tmp/arena-<slug>/brief.md
 
-题目、约束和需要读的材料:/tmp/arena-<slug>/brief.md
-
-规则:
-- 只读代码,不要修改仓库里的任何文件,不要运行会写文件的命令,不要 commit。
-- 唯一要写的文件是 /tmp/arena-<slug>/proposals/<runner>.md。
-- 方案里不要提你是哪个模型或哪家公司。
-
-方案文件包含:
+把方案写到 /tmp/arena-<slug>/proposals/<runner>.md,包含:
 1. 你对问题的理解和你做的假设
 2. 推荐方案:形状、关键接口/数据结构、为什么
-3. 考虑过并放弃的替代方案,各自放弃的理由
-4. 依据:引用到的代码用 path:line 标出;对外部库/平台能力的断言写明来源或注明「未核实」
+3. 考虑过的替代方案,以及为什么没选
+4. 依据:代码引用用 path:line 标出;对外部库/平台能力的断言注明来源,没核实的标「未核实」
 5. 风险,以及什么新信息会让你改变推荐
 6. 你最不确定的一点
-
-写完这个文件就结束,不要再做别的。
 ```
+
+### 写 prompt 的原则
+
+- **只说做什么。** 交付物定得足够具体(一个确定路径的文件),agent 自然只做这件事。不列「不要改仓库」「不要 commit」之类的禁令 —— 它们是噪音,还会把被禁止的事放进注意力里。万一越界,由 Phase F 的基线对比兜底。
+- **任务的「为什么」写进 brief。** 约束背后的原因(例如「首字延迟优先,因为冷加载会明显拖慢听写」)帮参赛者在 brief 没写到的地方做对取舍。
+- **arena 机制的「为什么」不说。** 不提有别的模型在做同一题、不提评审和打分。这些元信息会改变参赛者的行为。
+- **匿名由主持人负责。** 不要求参赛者隐藏身份;主持人在 Phase C 做匿名副本时去掉能暴露模型的内容。
 
 ### 等待完成
 
 ```bash
 herdr agent wait a-<slug>-<runner> --timeout 1200000
 test -s /tmp/arena-<slug>/proposals/<runner>.md
+herdr agent get a-<slug>-<runner>      # 状态不是 working
 ```
 
-- **以方案文件存在且非空为完成标准**,不以 agent 状态为准(agy 回到提示符就算 `idle`)。
+- **完成 = 方案文件存在且非空,并且 agent 已不在 working。** 两个条件缺一不可:agent 状态单独不可靠(agy 回到提示符就算 `idle`);文件单独也不够(参赛者可能先写文件,再继续自检或补写)。
+- 在后台循环等三份都满足条件,不要逐个前台阻塞。
 - `blocked`:用 `herdr agent read <name> --source visible` 看是什么。**不替用户点批准**,转述给用户决定。
 - 某个参赛者交不出:按 N-1 继续,在综合记录里写明掉队者和原因。
 
@@ -142,11 +155,12 @@ test -s /tmp/arena-<slug>/proposals/<runner>.md
 
 **所有参赛者交稿后**才起评审。
 
-1. 把方案复制成匿名副本:`proposals/<runner>.md` → `blind/A.md`、`B.md`、`C.md`,顺序打乱。对应关系只记在主持人这边。
-2. 在 arena tab 里起评审:
+1. **建评审专用目录** `/tmp/arena-<slug>-judge/`,只放 `brief.md`、`rubric.md` 和匿名副本。不要让评审在 `/tmp/arena-<slug>/` 里工作 —— 那里的 `proposals/<runner>.md` 带着模型名,评审一 `ls` 匿名就失效。
+2. 把方案复制成匿名副本:`proposals/<runner>.md` → `A.md`、`B.md`、`C.md`,顺序打乱,并去掉能暴露模型或公司的字样(自称、署名、工具名)。对应关系写进 `/tmp/arena-<slug>/mapping.txt`。
+3. 在 arena tab 的右下格起评审(从 gpt 格往下切,补齐 2×2),同样确认它真的进入 working:
 
 ```bash
-herdr pane split <root_pane_id> --direction down --cwd /tmp/arena-<slug> --no-focus
+herdr pane split <gpt_pane> --direction down --cwd /tmp/arena-<slug>-judge --no-focus
 herdr agent start a-<slug>-judge --kind agy --pane <pane_id> -- <评审参数>
 herdr agent prompt a-<slug>-judge "<评审 prompt>"
 ```
@@ -154,17 +168,17 @@ herdr agent prompt a-<slug>-judge "<评审 prompt>"
 评审 prompt:
 
 ```text
-你是方案评审。只读,唯一允许写的文件是 /tmp/arena-<slug>/judge.md。
+请评审同一个设计问题的几份方案,把评审写到 /tmp/arena-<slug>-judge/judge.md。
 
-题目:/tmp/arena-<slug>/brief.md
-rubric:/tmp/arena-<slug>/rubric.md
-方案:/tmp/arena-<slug>/blind/ 下的 A.md、B.md、C.md
+题目:/tmp/arena-<slug>-judge/brief.md
+评分标准:/tmp/arena-<slug>-judge/rubric.md
+方案:/tmp/arena-<slug>-judge/ 下的 A.md、B.md、C.md
 仓库(用于核实方案中的代码引用):<repo-root>
 
-1. 对每份方案逐条 rubric 打分(1–5),每条一句依据。
-2. 抽查每份方案里支撑结论的关键代码引用和事实断言,标出不成立的。
-3. 推荐一份做底稿,说明理由;再列出其他方案里值得移植的点。
-写完 judge.md 就结束。
+judge.md 包含:
+1. 每份方案逐条评分(1–5),每条一句依据
+2. 抽查每份方案里支撑结论的关键代码引用和事实断言,标出不成立的
+3. 推荐哪一份做底稿及理由,以及其他方案里值得移植的点
 ```
 
 评审跑的同时,主持人开始 Phase D。
