@@ -1,6 +1,6 @@
 ---
 name: arena
-description: "让不同家族的模型(Claude / OpenAI / Google)在 Herdr 里各自独立出一份方案,由 Claude Code 主持:交叉评审、挑底稿、嫁接其他方案的长处,交给用户拍板。只用于方案类问题:架构、设计、技术选型。用于 /arena、'arena this'、'丢进 arena'。不写代码。要求 HERDR_ENV=1。"
+description: "让不同家族的模型(Claude / OpenAI / Google)在 Herdr 里各自独立出一份方案,由当前会话主持:交叉评审、挑底稿、嫁接其他方案的长处,交给用户拍板。只用于方案类问题:架构、设计、技术选型。用于 /arena、'arena this'、'丢进 arena'。不写代码。要求 HERDR_ENV=1。"
 disable-model-invocation: true
 ---
 
@@ -14,7 +14,7 @@ disable-model-invocation: true
 
 - **只做方案,不写代码。** 适用于架构、设计、选型这类「定了就难改」的决定。方案定下来之后直接实现,不再横向比较实现。
 - **不开 worktree。** 参赛者都在当前 checkout 里只读代码,只往 `/tmp/arena-<slug>/` 写自己的方案文件。
-- **多家模型靠 Herdr。** 每个模型家族是一个独立的 CLI agent,不是 Claude Code 的内部 subagent。
+- **多家模型靠 Herdr。** 每个模型家族是一个独立的 CLI agent,不是当前工具的内部 subagent。
 - **最后由用户拍板。** 主持人给出综合方案和推荐,不替用户做最终决定。
 
 ## 什么时候不该用
@@ -29,11 +29,11 @@ disable-model-invocation: true
 test "${HERDR_ENV:-}" = 1
 ```
 
-不满足就停下,说「我不在 Herdr 的 pane 里,arena 需要它」。不要退化成 Claude Code 内部 subagent —— 那样只剩 Anthropic 一家,arena 失去意义。
+不满足就停下,说「我不在 Herdr 的 pane 里,arena 需要它」。不要退化成当前工具的内部 subagent —— 那样只剩一家模型,arena 失去意义。
 
 ## 角色与模型
 
-主持人就是**当前这个 Claude Code 会话**,不参赛。
+主持人就是**调用 arena 的当前会话**(Claude Code、Codex、agy 都可以),不参赛。三家参赛者照常全部派出,包括和主持人同家族的那一个。
 
 | 角色 | Herdr kind | 启动参数(`agent start ... --` 之后) |
 | --- | --- | --- |
@@ -46,7 +46,7 @@ test "${HERDR_ENV:-}" = 1
 
 改模型只改这张表。规则:
 
-- **评审必须和主持人不同家族**(主持人是 Claude,评审不能是 `claude`)。
+- **评审必须和主持人不同家族。** 默认评审用 `agy`;主持人自己是 agy 时,评审改用 `codex`(选一个不在参赛者里的 GPT 模型)。
 - **评审不能和任何参赛者是同一个模型**,否则它在给自己打分。
 - 评审是纯判断活,模型和推理强度往高开;参赛者可以按需降档。
 
@@ -185,7 +185,7 @@ judge.md 包含:
 
 ## Phase D:挑底稿(Pick)
 
-**挑之前把每份方案从头读到尾。** 只扫一眼的话,最后胜出的往往只是表面最眼熟的那份 —— 主持人是 Claude,对 Claude 的写法天然顺眼,这一点要主动提防。
+**挑之前把每份方案从头读到尾。** 只扫一眼的话,最后胜出的往往只是表面最眼熟的那份 —— 主持人对自己同家族模型的写法天然顺眼,这一点要主动提防。
 
 - 按 rubric **逐条**打分,不凭整体感觉。
 - 与 `judge.md` 对照。底稿一致 = 确认;不一致 = 一方有偏见或 rubric 含糊,读双方理由再定,并把分歧写进记录。
