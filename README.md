@@ -19,7 +19,7 @@
 
 ## 安装
 
-`~/.agents/skills/` 是中心,其他工具的目录都链接到它:
+把本仓库克隆到任意位置(下文记作 `<clone>`)。`~/.agents/skills/` 是中心,其他工具的目录都链接到它:
 
 ```text
 ~/.agents/skills/<skill>         -> <clone>/skills/<skill>                     (Codex 直接读)
