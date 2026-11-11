@@ -8,7 +8,7 @@
 
 | skill | 调用方式 | 相对上游的改动 |
 | --- | --- | --- |
-| `arena-herdr` | `/arena-herdr` 手动 | 重写:只做方案;任一 agent 主持,多家模型经 Herdr 起在 2×2 tab 里;匿名评审 |
+| `arena` | `/arena` 手动 | 重写:只做方案;任一 agent 主持,多家模型经 Herdr 起在 2×2 tab 里;匿名评审 |
 | `architect` | `/architect` 手动 | 模型用 arena 的表 |
 | `how` | 自动可见 | 探索/讲解用本工具的只读子 agent;批评模式经 Herdr 起多家模型 |
 | `why` | 自动可见 | 调查/综合用本工具带 MCP 的子 agent;列出本会话的 MCP |

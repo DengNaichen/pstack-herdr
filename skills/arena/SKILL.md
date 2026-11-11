@@ -1,10 +1,9 @@
 ---
-name: arena-herdr
-description: "让不同家族的模型(Claude / OpenAI / Google)在 Herdr 里各自独立出一份方案,由当前会话主持:交叉评审、挑底稿、嫁接其他方案的长处,交给用户拍板。只用于方案类问题:架构、设计、技术选型。用于 /arena-herdr,或用户明确要求跨家族(Claude / Codex / Gemini)出方案时。同家族比较用 pstack 的 arena。不写代码。要求 HERDR_ENV=1。"
-disable-model-invocation: true
+name: arena
+description: "让不同家族的模型(Claude / OpenAI / Google)在 Herdr 里各自独立出一份方案,由当前会话主持:交叉评审、挑底稿、嫁接其他方案的长处,交给用户拍板。只用于方案类问题:架构、设计、技术选型。用于 /arena、'arena this'、'丢进 arena',以及其他 skill(如 architect、poteto-mode)要求运行 arena 时。不写代码。要求 HERDR_ENV=1。"
 ---
 
-# Arena-Herdr(跨家族方案版)
+# Arena(Herdr 跨家族方案版)
 
 改编自 poteto/pstack 的 [`arena`](https://github.com/poteto/plugins/blob/main/pstack/skills/arena/SKILL.md)。
 
