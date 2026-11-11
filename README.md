@@ -25,3 +25,15 @@
 ~/.claude/skills/<skill>         -> ../../.agents/skills/<skill>              (Claude Code)
 ~/.gemini/config/skills/<skill>  -> ~/.agents/skills/<skill>                  (Antigravity / agy)
 ```
+
+## Hooks
+
+`hooks/herdr-subagent-routing.sh` 是 SessionStart hook:在 Herdr 里(`HERDR_ENV=1`)把 [`herdr-subagent-routing.md`](hooks/herdr-subagent-routing.md) 的分流规则注入上下文,告诉 agent 什么时候用 Herdr 起 agent、什么时候用原生子 agent;不在 Herdr 里不注入。规则正文只改这一个 md。
+
+安装:`~/.agents/hooks -> ~/Developer/pstack-herdr/hooks`,三家的全局配置各加一条(与 Herdr 自带的 hook 并列,不改它们):
+
+| 工具 | 配置文件 | 命令 |
+| --- | --- | --- |
+| Claude Code | `~/.claude/settings.json` → `hooks.SessionStart`,matcher `^(startup\|clear\|compact)$` | `sh ~/.agents/hooks/herdr-subagent-routing.sh claude` |
+| Codex | `~/.codex/hooks.json` → `hooks.SessionStart`;首次需在 Codex 交互界面信任 | `sh ~/.agents/hooks/herdr-subagent-routing.sh codex` |
+| agy | `~/.gemini/config/hooks.json` → `herdr-subagent-routing.SessionStart` | `sh ~/.agents/hooks/herdr-subagent-routing.sh agy` |
