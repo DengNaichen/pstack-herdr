@@ -117,7 +117,7 @@ herdr agent get a-<slug>-<runner>                           # 几秒后确认状
 - **确认 prompt 真的被接住。** `agent_prompted` 只说明字写进了终端,不代表 agent 开始干活。agy 等 CLI 启动时可能弹公告(如「Introducing Gemini …  esc to dismiss」)把 prompt 吞掉。发完几秒后状态仍是 `idle`:`agent read --source visible` 看屏幕,输入框为空就 `agent send-keys <name> esc` 关掉弹窗再重发;输入框里还有字就只补一个 Enter,不要重发。
 - cwd 是仓库根目录,这样参赛者能读代码;写入只发生在 `/tmp/arena-<slug>/`。
 
-参赛者 prompt(三人相同,只有文件名不同):
+参赛者 prompt(三人相同,只有文件名不同)。被其他 skill 调用、且调用方给了自己的参赛者 prompt 或方案模板(如 architect 的 `references/runner-prompt.md`)时,用调用方的,只保留下面的输出路径:
 
 ```text
 请为这个设计问题给出一份方案:/tmp/arena-<slug>/brief.md
@@ -209,6 +209,8 @@ judge.md 包含:
 核实推翻了某个前提:要么 Phase A 错了(重新定题),要么某份方案注意到了而你漏了嫁接(回 Phase E)。不要糊过去。
 
 ## Phase G:交给用户(Hand off)
+
+被其他 skill 调用时(如 architect),是否停下来等用户拍板由调用方决定;综合记录照写。
 
 写 `/tmp/arena-<slug>/synthesis.md`:
 
