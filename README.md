@@ -15,8 +15,10 @@
 
 ## 安装
 
-每个 skill 目录软链接到三处,三家统一安装:
+`~/.agents/skills/` 是中心,其他工具的目录都链接到它:
 
-- `~/.claude/skills/`(Claude Code)
-- `~/.agents/skills/`(Codex)
-- `~/.gemini/config/skills/`(Antigravity / agy)
+```text
+~/.agents/skills/<skill>         -> ~/Developer/pstack-herdr/skills/<skill>   (Codex 直接读)
+~/.claude/skills/<skill>         -> ../../.agents/skills/<skill>              (Claude Code)
+~/.gemini/config/skills/<skill>  -> ~/.agents/skills/<skill>                  (Antigravity / agy)
+```
