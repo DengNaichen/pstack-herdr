@@ -20,9 +20,9 @@ Open a todolist with one entry per phase before starting. Autonomous mode withou
 
 ## Phase A: Ground the problem
 
-Build a real mental model of every system the new code touches. Trace the relevant subsystems yourself: entry points, data flow, owners, and invariants, cited as `path:line`. Critique the existing structure where it is the constraint or the design must push back on it.
+Build a real mental model of every system the new code touches. Run the **how** skill over the relevant subsystems. Critique mode if existing structure is the constraint or the design must push back on it.
 
-Naming a file isn't grounding. Write the traced model down as a grounding artifact. If the design redefines ownership or layering, also dig up why the existing shape is the way it is (git log, blame, specs, docs) so the rationale becomes a constraint, not a guess.
+Naming a file isn't grounding. Produce the traced model `how` prescribes. If the design redefines ownership or layering, also run the **why** skill on the existing shape so the rationale becomes a constraint, not a guess.
 
 Skip Phase A only when the work is genuinely greenfield with no surrounding system to integrate.
 
@@ -69,7 +69,7 @@ Use judgment. A few edge cases don't condemn an architecture. Some problems are 
 
 When you scrap:
 
-1. Re-trace what's been built, the same way as Phase A. The implementation lessons enter the new design as inputs, not vibes.
+1. Re-run the **how** skill over what's been built. The implementation lessons enter the new design as inputs, not vibes.
 2. Redesign as if the new constraints had been day-one assumptions, per redesign-from-first-principles.
 3. Subtract before adding, per the **subtract-before-you-add** principle skill. The new sketch should be smaller than the old one before it grows.
 4. Return to Phase B and re-run arena.

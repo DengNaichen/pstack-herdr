@@ -9,7 +9,9 @@
 | skill | 调用方式 | 相对上游的改动 |
 | --- | --- | --- |
 | `arena` | `/arena` 手动 | 重写:只做方案;任一 agent 主持,多家模型经 Herdr 起在 2×2 tab 里;匿名评审 |
-| `architect` | `/architect` 手动 | 模型用 arena 的表;Phase A/E 不依赖未引入的 how / why |
+| `architect` | `/architect` 手动 | 模型用 arena 的表 |
+| `how` | 自动可见 | 探索/讲解用本工具的只读子 agent;批评模式经 Herdr 起多家模型 |
+| `why` | 自动可见 | 调查/综合用本工具带 MCP 的子 agent;列出本会话的 MCP |
 | `figure-it-out` | `/figure-it-out` 手动 | 去掉对 poteto-mode 的依赖 |
 | `show-me-your-work` | `/show-me-your-work` 手动 | 交叉审查改用 Herdr 起别家模型;不读 Cursor 的 transcript 目录 |
 | `principle-*`(20 条) | 自动可见 | 去掉 `disable-model-invocation`,description 常驻作为原则索引 |
